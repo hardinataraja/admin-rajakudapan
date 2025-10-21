@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Raja Kudapan — Admin Panel</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body id="page-admin">
+
+  <aside class="sidebar">
+    <div class="brand">🍜 Raja Kudapan</div>
+    <nav>
+      <button class="nav-btn active" data-target="dashboard">📊 Dashboard</button>
+      <button class="nav-btn" data-target="orders">🧾 Orders <span id="orderBadge" class="badge hidden" title="New order"></span></button>
+      <button class="nav-btn" data-target="menus">🍱 Menu</button>
+      <button class="nav-btn" data-target="merchant">🏪 Merchant Settings</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="panel active">
+      <div class="panel-header">
+        <h2>Dashboard</h2>
+        <div class="panel-controls">
+          <label for="dashboardRange">Range:</label>
+          <select id="dashboardRange">
+            <option value="1">Hari ini</option>
+            <option value="7" selected>7 hari</option>
+            <option value="30">30 hari</option>
+            <option value="all">Semua</option>
+          </select>
+          <button id="btnRefresh" class="btn-ghost">Refresh</button>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card highlight">
+          <h3 id="totalSalesToday">Rp 0</h3>
+          <p>💰 Total Penjualan Hari Ini</p>
+        </div>
+        <div class="card">
+          <h3 id="totalOrders">0</h3>
+          <p>Total Orders</p>
+        </div>
+        <div class="card">
+          <h3 id="pendingOrders">0</h3>
+          <p>Pending</p>
+        </div>
+        <div class="card">
+          <h3 id="processingOrders">0</h3>
+          <p>Processing</p>
+        </div>
+        <div class="card">
+          <h3 id="doneOrders">0</h3>
+          <p>Selesai</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <canvas id="ordersChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section id="orders" class="panel">
+      <div class="panel-header">
+        <h2>Orders</h2>
+        <div class="panel-controls">
+          <label for="ordersFilter">Filter:</label>
+          <select id="ordersFilter">
+            <option value="1">Hari ini</option>
+            <option value="7">7 hari</option>
+            <option value="30">30 hari</option>
+            <option value="all">Semua</option>
+          </select>
+          <button id="btnClearFilter" class="btn-ghost">Reset</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th>Nama</th>
+              <th>No. WhatsApp</th>
+              <th>Alamat</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Ubah</th>
+             
+            </tr>
+          </thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MENUS -->
+    <section id="menus" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2>Menu Management</h2>
+        <button class="btn" id="addMenuBtn">+ Tambah Menu</button>
+      </div>
+      <div class="table-wrap" style="margin-top:12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Harga</th>
+              <th>Stock</th>
+              <th>Kategori</th>
+              <th>Gambar</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="menuTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MERCHANT SETTINGS -->
+    <section id="merchant" class="panel">
+      <div class="panel-header">
+        <h2>Merchant Settings</h2>
+        <div class="panel-controls">
+          <button id="btnLoadSettings" class="btn-ghost">Load</button>
+        </div>
+      </div>
+
+      <form id="merchantForm" class="merchant-form">
+        <label>Nama Toko</label>
+        <input id="storeName" placeholder="Raja Kudapan">
+
+        <label>Rekening BRI</label>
+        <input id="rekeningBRI" placeholder="BRI 008-9876543210 a.n Raja Kudapan">
+
+        <label>Rekening BCA</label>
+        <input id="rekeningBCA" placeholder="BCA 123-456-7890 a.n Raja Kudapan">
+
+        <label>DANA</label>
+        <input id="dana" placeholder="0857-0000-1111 a.n Raja Kudapan">
+
+        <label>OVO</label>
+        <input id="ovo" placeholder="0857-0000-2222 a.n Raja Kudapan">
+
+        <label>GoPay</label>
+        <input id="gopay" placeholder="0857-0000-3333 a.n Raja Kudapan">
+
+        <label>LinkAja</label>
+        <input id="linkaja" placeholder="0857-0000-4444 a.n Raja Kudapan">
+
+        <label>QRIS (URL gambar)</label>
+<input id="qris" placeholder="https://...">
+<img id="qrisPreview" class="qris-preview" alt="Preview QRIS">
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="submit" class="btn">💾 Simpan Pengaturan</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
