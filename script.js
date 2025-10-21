@@ -1,10 +1,11 @@
+/* ------------------ FIREBASE INIT ------------------ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc,
   doc, onSnapshot, orderBy, query, where, setDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-/* ------------------ Firebase Config ------------------ */
+/* ------------------ CONFIG ------------------ */
 const firebaseConfig = {
   apiKey: "AIzaSyC7VFvAsqRjiYinzfUfwabqHVvMWsvVhFo",
   authDomain: "raja-kudapan.firebaseapp.com",
@@ -14,6 +15,7 @@ const firebaseConfig = {
   appId: "1:61175543723:web:57d4a4f64480cb7f4344ee",
   measurementId: "G-ZGFTZER9RJ"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -76,7 +78,8 @@ function subscribeOrders(range = "7") {
 
   const startISO = isoDateNDaysAgo(range);
   let q;
-  if (startISO) q = query(collection(db, "orders"), where("time", ">=", startISO), orderBy("time", "desc"));
+  if (startISO)
+    q = query(collection(db, "orders"), where("time", ">=", startISO), orderBy("time", "desc"));
   else q = query(collection(db, "orders"), orderBy("time", "desc"));
 
   ordersUnsub = onSnapshot(q, (snap) => {
@@ -93,36 +96,42 @@ function subscribeOrders(range = "7") {
 
     snap.forEach((docSnap) => {
       const d = docSnap.data();
-      const total = Number(d.total || 0);
+      const total = Number(d.total_bayar || d.total || 0);
 
-      // Tally status
+      // hitung status
       stats[d.status] = (stats[d.status] || 0) + 1;
 
-      // Jika pesanan hari ini dan sudah dibayar/selesai
+      // hitung penjualan hari ini
       if (d.time >= todayISO && d.status !== "pending") totalSalesToday += total;
 
-      // Build row
+      // tampilkan daftar produk
+      const itemsList = (d.items || [])
+        .map(it => `${it.name} x${it.qty} @Rp${Number(it.price).toLocaleString("id-ID")}`)
+        .join("<br>");
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-  <td>${d.code || "-"}</td>
-  <td>${d.nama || "-"}</td>
-  <td><a href="https://wa.me/${(d.nohp || "").replace(/[^0-9]/g,"")}" target="_blank">${d.nohp || "-"}</a></td>
-  <td>${(d.alamat || "").replace(/\n/g,"<br>")}</td>
-  <td>${formatRupiah(total)}</td>
-  <td><span class="status ${d.status}">${d.status}</span></td>
-  <td>
-    <select data-id="${docSnap.id}" class="status-select">
-      <option value="pending" ${d.status==="pending"?"selected":""}>Pending</option>
-      <option value="processing" ${d.status==="processing"?"selected":""}>Processing</option>
-      <option value="delivering" ${d.status==="delivering"?"selected":""}>Delivering</option>
-      <option value="done" ${d.status==="done"?"selected":""}>Done</option>
-    </select>
-  </td>
-`;
+        <td>${d.kode || d.code || "-"}</td>
+        <td>${d.nama || "-"}</td>
+        <td><a href="https://wa.me/${(d.nohp || "").replace(/[^0-9]/g,"")}" target="_blank">${d.nohp || "-"}</a></td>
+        <td>${(d.alamat || "").replace(/\n/g,"<br>")}</td>
+        <td>${itemsList || "-"}</td>
+        <td>${formatRupiah(total)}</td>
+        <td><span class="status ${d.status}">${d.status}</span></td>
+        <td>
+          <select data-id="${docSnap.id}" class="status-select">
+            <option value="pending" ${d.status==="pending"?"selected":""}>Pending</option>
+            <option value="processing" ${d.status==="processing"?"selected":""}>Processing</option>
+            <option value="delivering" ${d.status==="delivering"?"selected":""}>Delivering</option>
+            <option value="done" ${d.status==="done"?"selected":""}>Done</option>
+          </select>
+        </td>
+      `;
+
       tbody.appendChild(tr);
     });
 
-    // Show badge for new orders
+    // Notifikasi order baru
     const badge = $("#orderBadge");
     if (previousCount && currentCount > previousCount) {
       badge.classList.remove("hidden");
@@ -130,16 +139,17 @@ function subscribeOrders(range = "7") {
     }
     previousCount = currentCount;
 
-    // Update dashboard
+    // Update dashboard info
     const totalAll = (stats.pending||0) + (stats.processing||0) + (stats.delivering||0) + (stats.done||0);
     $("#totalOrders").textContent = totalAll;
     $("#pendingOrders").textContent = stats.pending || 0;
     $("#processingOrders").textContent = stats.processing || 0;
     $("#doneOrders").textContent = stats.done || 0;
     $("#totalSalesToday").textContent = formatRupiah(totalSalesToday);
+
     renderChart(stats);
 
-    // Attach update handlers
+    // Update status pesanan
     document.querySelectorAll(".status-select").forEach((sel) => {
       sel.onchange = async () => {
         try {
@@ -243,8 +253,6 @@ async function deleteMenu(id) {
 
 /* ------------------ MERCHANT SETTINGS ------------------ */
 const settingsRef = doc(db, "settings", "merchant");
-
-// elemen input & preview QRIS
 const qrisInput = document.getElementById("qris");
 const qrisPreview = document.getElementById("qrisPreview");
 
@@ -256,7 +264,6 @@ function updateQrisPreview() {
   }
 }
 
-// load data merchant
 async function loadSettings() {
   try {
     const snap = await getDocs(collection(db, "settings"));
@@ -271,16 +278,14 @@ async function loadSettings() {
       $("#linkaja").value = data.linkaja || "";
       $("#qris").value = data.qris || "";
     });
-    updateQrisPreview(); // tampilkan preview jika ada
+    updateQrisPreview();
   } catch (err) {
     console.error("loadSettings err", err);
   }
 }
 
-// tombol "Load" manual
 $("#btnLoadSettings").onclick = loadSettings;
 
-// form simpan pengaturan
 $("#merchantForm").onsubmit = async (e) => {
   e.preventDefault();
   const data = {
@@ -296,38 +301,24 @@ $("#merchantForm").onsubmit = async (e) => {
   try {
     await setDoc(settingsRef, data);
     Swal.fire("Disimpan", "Pengaturan merchant diperbarui", "success");
-    updateQrisPreview(); // update preview setelah disimpan
+    updateQrisPreview();
   } catch (err) {
     console.error(err);
     Swal.fire("Error", "Gagal menyimpan pengaturan", "error");
   }
 };
 
-// update preview setiap kali user ubah URL QRIS
 if (qrisInput) {
   qrisInput.addEventListener("input", updateQrisPreview);
 }
 
 /* ------------------ FILTER CONTROL ------------------ */
-$("#ordersFilter").addEventListener("change", () => {
-  subscribeOrders($("#ordersFilter").value);
-});
-$("#btnClearFilter").addEventListener("click", () => {
-  $("#ordersFilter").value = "1";
-  subscribeOrders("1");
-});
-$("#btnRefresh").addEventListener("click", () => {
-  const dr = $("#dashboardRange").value;
-  subscribeOrders(dr);
-  loadMenus();
-  loadSettings();
-});
+$("#ordersFilter").addEventListener("change", () => subscribeOrders($("#ordersFilter").value));
+$("#btnClearFilter").addEventListener("click", () => { $("#ordersFilter").value = "1"; subscribeOrders("1"); });
+$("#btnRefresh").addEventListener("click", () => { const dr = $("#dashboardRange").value; subscribeOrders(dr); loadMenus(); loadSettings(); });
+$("#dashboardRange").addEventListener("change", (e) => subscribeOrders(e.target.value));
 
-/* Start default: 7 hari */
+/* ------------------ INIT ------------------ */
 subscribeOrders($("#dashboardRange").value || "7");
 loadMenus();
 loadSettings();
-
-$("#dashboardRange").addEventListener("change", (e) => {
-  subscribeOrders(e.target.value);
-});
