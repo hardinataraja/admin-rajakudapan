@@ -10,6 +10,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- html2canvas untuk render invoice -> PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body id="page-admin">
 
@@ -20,6 +22,7 @@
       <button class="nav-btn" data-target="orders">🧾 Orders <span id="orderBadge" class="badge hidden" title="New order"></span></button>
       <button class="nav-btn" data-target="menus">🍱 Menu</button>
       <button class="nav-btn" data-target="merchant">🏪 Merchant Settings</button>
+      <button id="btnLogout" class="nav-btn">🚪 Logout</button>
     </nav>
   </aside>
 
@@ -81,6 +84,8 @@
             <option value="all">Semua</option>
           </select>
           <button id="btnClearFilter" class="btn-ghost">Reset</button>
+          <!-- tombol hapus massal -->
+          <button id="btnDeleteSelected" class="btn" style="margin-left:12px;background:#c62828;">Hapus Terpilih</button>
         </div>
       </div>
 
@@ -88,15 +93,17 @@
         <table>
           <thead>
             <tr>
+              <th><input id="checkAllOrders" type="checkbox" title="Pilih semua"></th>
               <th>Kode</th>
+              <th>Tanggal</th>
               <th>Nama</th>
               <th>No. WhatsApp</th>
               <th>Alamat</th>
               <th>Pesanan</th>
               <th>Total</th>
+              <th>Metode Bayar</th>
               <th>Status</th>
-              <th>Ubah</th>
-             
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody id="ordersTable"></tbody>
@@ -169,6 +176,7 @@
     </section>
   </main>
 
+  <!-- main script (berisi initializeApp, firestore, auth, dan logic) -->
   <script type="module" src="./script.js"></script>
 </body>
 </html>
