@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Tambah Toko Baru — Raja Kudapan</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --primary: #ff7043;
+      --primary-dark: #e85b2a;
+      --bg: #fff7f2;
+      --text: #333;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: var(--text);
+    }
+
+    .form-card {
+      background: #fff;
+      padding: 28px 24px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      width: 90%;
+      max-width: 420px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 22px;
+      color: var(--primary);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    label {
+      font-weight: 600;
+      margin-top: 12px;
+      display: block;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-top: 5px;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(255,112,67,0.15);
+    }
+
+    button {
+      margin-top: 22px;
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.25s ease, transform 0.1s ease;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+    }
+
+    button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    #logoPreview {
+      display: block;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 10px auto;
+      border: 2px solid #eee;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-card">
+    <div class="brand">🍜 Raja Kudapan</div>
+    <h2>Tambah Toko Baru</h2>
+
+    <form id="createStoreForm">
+      <label>Nama Toko</label>
+      <input id="storeName" placeholder="Contoh: Ayam Geprek Raja" required>
+
+      <label>ID Toko (unik, tanpa spasi)</label>
+      <input id="storeID" placeholder="ayamgeprekraja" required>
+
+      <label>Nomor WhatsApp</label>
+      <input id="storeWA" placeholder="0857-xxxx-xxxx">
+
+      <label>Alamat</label>
+      <input id="storeAddress" placeholder="Jl. Contoh No. 123">
+
+      <label>Logo Toko (URL gambar, opsional)</label>
+      <input id="storeLogo" placeholder="https://example.com/logo.png">
+      <img id="logoPreview" src="" alt="Preview Logo" style="display:none;">
+
+      <button type="submit">+ Tambah Toko</button>
+    </form>
+
+    <footer>© 2025 Raja Kudapan</footer>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7VFvAsqRjiYinzfUfwabqHVvMWsvVhFo",
+      authDomain: "raja-kudapan.firebaseapp.com",
+      projectId: "raja-kudapan",
+      storageBucket: "raja-kudapan.firebasestorage.app",
+      messagingSenderId: "61175543723",
+      appId: "1:61175543723:web:57d4a4f64480cb7f4344ee",
+      measurementId: "G-ZGFTZER9RJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("createStoreForm");
+    const logoInput = document.getElementById("storeLogo");
+    const logoPreview = document.getElementById("logoPreview");
+
+    // Preview logo otomatis
+    logoInput.addEventListener("input", () => {
+      const url = logoInput.value.trim();
+      if (url && url.startsWith("http")) {
+        logoPreview.src = url;
+        logoPreview.style.display = "block";
+      } else {
+        logoPreview.style.display = "none";
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = form.storeName.value.trim();
+      const id = form.storeID.value.trim().toLowerCase();
+      const wa = form.storeWA.value.trim();
+      const address = form.storeAddress.value.trim();
+      const logo = form.storeLogo.value.trim();
+
+      if (!id.match(/^[a-z0-9-]+$/)) {
+        Swal.fire("Format ID toko tidak valid", "Gunakan huruf kecil dan tanda hubung (-) saja", "error");
+        return;
+      }
+
+      try {
+        await setDoc(doc(db, "stores", id), {
+          storeName: name,
+          whatsapp: wa,
+          address: address,
+          logo: logo || "",
+          createdAt: new Date().toISOString()
+        });
+
+        await setDoc(doc(db, "settings", id, "config", "default"), {
+          storeName: name,
+          rekeningBCA: "",
+          dana: "",
+          qris: ""
+        });
+
+        Swal.fire({
+          title: "Berhasil 🎉",
+          text: `Toko "${name}" berhasil ditambahkan!`,
+          icon: "success",
+          confirmButtonText: "Kelola Sekarang"
+        }).then(() => {
+          window.location.href = `./index.html?store=${id}`;
+        });
+      } catch (err) {
+        console.error("Gagal menambah toko:", err);
+        Swal.fire("Gagal", err.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>

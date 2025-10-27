@@ -10,7 +10,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- html2canvas untuk render invoice -> PNG -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body id="page-admin">
@@ -31,6 +30,16 @@
     <section id="dashboard" class="panel active">
       <div class="panel-header">
         <h2>Dashboard</h2>
+
+        <!-- 🔹 Tambahan baru: dropdown pilih toko -->
+        <div class="panel-controls">
+          <label for="storeSelect" style="font-weight:600;">Pilih Toko:</label>
+          <select id="storeSelect" style="padding:6px 10px;border-radius:8px;border:1px solid #ccc;min-width:150px;">
+            <option value="">-- Pilih Toko --</option>
+          </select>
+        </div>
+
+        <!-- Panel kontrol dashboard tetap -->
         <div class="panel-controls">
           <label for="dashboardRange">Range:</label>
           <select id="dashboardRange">
@@ -84,7 +93,6 @@
             <option value="all">Semua</option>
           </select>
           <button id="btnClearFilter" class="btn-ghost">Reset</button>
-          <!-- tombol hapus massal -->
           <button id="btnDeleteSelected" class="btn" style="margin-left:12px;background:#c62828;">Hapus Terpilih</button>
         </div>
       </div>
@@ -166,8 +174,8 @@
         <input id="linkaja" placeholder="0857-0000-4444 a.n Raja Kudapan">
 
         <label>QRIS (URL gambar)</label>
-<input id="qris" placeholder="https://...">
-<img id="qrisPreview" class="qris-preview" alt="Preview QRIS">
+        <input id="qris" placeholder="https://...">
+        <img id="qrisPreview" class="qris-preview" alt="Preview QRIS">
 
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
           <button type="submit" class="btn">💾 Simpan Pengaturan</button>
@@ -176,7 +184,6 @@
     </section>
   </main>
 
-  <!-- main script (berisi initializeApp, firestore, auth, dan logic) -->
   <script type="module" src="./script.js"></script>
 </body>
 </html>

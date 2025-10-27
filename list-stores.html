@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Daftar Toko — Raja Kudapan</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --primary: #ff7043;
+      --primary-dark: #e85b2a;
+      --bg: #fff7f2;
+      --text: #333;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 16px;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      width: 95%;
+      max-width: 800px;
+      background: #fff;
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary-dark);
+      margin-bottom: 18px;
+    }
+
+    .store-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      transition: 0.2s ease;
+      background: #fffaf8;
+    }
+
+    .store-card:hover {
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+      transform: translateY(-2px);
+    }
+
+    .store-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .store-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #eee;
+      background: #fff;
+    }
+
+    .store-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    .store-actions button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .btn-manage {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-manage:hover { background: var(--primary-dark); }
+
+    .btn-delete {
+      background: #e53935;
+      color: white;
+      margin-left: 6px;
+    }
+    .btn-delete:hover { background: #b71c1c; }
+
+    .btn-add {
+      width: 100%;
+      margin-top: 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .btn-add:hover {
+      background: var(--primary-dark);
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>🍜 Raja Kudapan — Super Admin</header>
+
+  <main>
+    <h2>Daftar Toko</h2>
+    <div id="storeList">Memuat toko...</div>
+
+    <button class="btn-add" id="btnAddStore">+ Tambah Toko Baru</button>
+  </main>
+
+  <footer>© 2025 Raja Kudapan</footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, deleteDoc, doc
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7VFvAsqRjiYinzfUfwabqHVvMWsvVhFo",
+      authDomain: "raja-kudapan.firebaseapp.com",
+      projectId: "raja-kudapan",
+      storageBucket: "raja-kudapan.firebasestorage.app",
+      messagingSenderId: "61175543723",
+      appId: "1:61175543723:web:57d4a4f64480cb7f4344ee",
+      measurementId: "G-ZGFTZER9RJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const storeList = document.getElementById("storeList");
+    const btnAddStore = document.getElementById("btnAddStore");
+
+    btnAddStore.onclick = () => {
+      window.location.href = "./create-store.html";
+    };
+
+    async function loadStores() {
+      storeList.innerHTML = "Memuat toko...";
+      try {
+        const snap = await getDocs(collection(db, "stores"));
+        if (snap.empty) {
+          storeList.innerHTML = "<p style='text-align:center;color:#888;'>Belum ada toko terdaftar</p>";
+          return;
+        }
+
+        storeList.innerHTML = "";
+        snap.forEach((d) => {
+          const s = d.data();
+          const logo = s.logo || "https://via.placeholder.com/80x80.png?text=🍜";
+          const card = document.createElement("div");
+          card.className = "store-card";
+          card.innerHTML = `
+            <div class="store-info">
+              <img src="${logo}" class="store-logo" alt="logo">
+              <div>
+                <div class="store-name">${s.storeName || d.id}</div>
+                <small>${s.address || "Alamat belum diatur"}</small>
+              </div>
+            </div>
+            <div class="store-actions">
+              <button class="btn-manage" data-id="${d.id}">Kelola</button>
+              <button class="btn-delete" data-id="${d.id}">Hapus</button>
+            </div>
+          `;
+          storeList.appendChild(card);
+        });
+
+        document.querySelectorAll(".btn-manage").forEach(btn => {
+          btn.onclick = () => {
+            const id = btn.getAttribute("data-id");
+            window.location.href = `./index.html?store=${id}`;
+          };
+        });
+
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+          btn.onclick = async () => {
+            const id = btn.getAttribute("data-id");
+            const confirm = await Swal.fire({
+              title: "Hapus Toko?",
+              text: `Toko ${id} akan dihapus permanen dari sistem.`,
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "Ya, hapus",
+              cancelButtonText: "Batal",
+            });
+            if (!confirm.isConfirmed) return;
+            await deleteDoc(doc(db, "stores", id));
+            Swal.fire("Dihapus", `Toko ${id} berhasil dihapus`, "success");
+            loadStores();
+          };
+        });
+
+      } catch (err) {
+        console.error("Gagal memuat toko:", err);
+        storeList.innerHTML = "Gagal memuat data toko.";
+      }
+    }
+
+    loadStores();
+  </script>
+</body>
+</html>
